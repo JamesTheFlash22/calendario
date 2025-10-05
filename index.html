@@ -1,387 +1,667 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Calendario della Classe</title>
-<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Calendario della Classe</title>
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
 
-<style>
-body { margin:0; font-family:"Segoe UI", sans-serif; background:#f9fafb; }
-header { 
-    background:#2563eb; 
-    color:white; 
-    padding:20px; 
-    text-align:center; 
-    font-weight:bold; 
-    font-size:1.5rem; 
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-}
-#calendar { 
-    max-width: 1200px; 
-    margin: 20px auto;
-    padding: 20px;
-}
-#addEventBtn { 
-    position: fixed; 
-    bottom: 20px; 
-    right: 20px; 
-    background: #2563eb; 
-    color: white; 
-    border: none; 
-    border-radius: 50%; 
-    width: 55px; 
-    height: 55px; 
-    font-size: 2rem; 
-    cursor: pointer; 
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2); 
-    transition: none !important;  /* Modificato */
-    z-index: 9999;  /* Aumentato */
-    transform: none !important;
-    -webkit-transform: none !important;  /* Aggiunto */
-    -moz-transform: none !important;     /* Aggiunto */
-    -ms-transform: none !important;      /* Aggiunto */
-    will-change: auto;                   /* Aggiunto */
-    position: fixed !important;          /* Aggiunto */
-}
-#addEventBtn:hover { background:#1e40af; }
-.modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:10; }
-.modal-content, .eventModalContent { 
-    background:white; 
-    padding:30px; 
-    border-radius:14px; 
-    width:90%; 
-    max-width:500px; 
-    position:relative; 
-    box-shadow:0 6px 16px rgba(0,0,0,0.2); 
-    animation:fadeIn 0.2s ease-in-out; 
-}
-@keyframes fadeIn { from{transform:scale(0.95);opacity:0;} to{transform:scale(1);opacity:1;} }
-.modal-content input, .modal-content textarea {
-    padding: 12px;
-    margin: 12px 0;
-    font-size: 1rem;
-}
-button { margin-top:10px; width:100%; padding:12px; border:none; border-radius:8px; font-size:1rem; cursor:pointer; transition:0.15s; }
-button:hover { transform:translateY(-1px); }
-.saveBtn { background:#2563eb; color:white; } .saveBtn:hover { background:#1e40af; }
-.cancelBtn { background:#e5e7eb; } .cancelBtn:hover { background:#d1d5db; }
-.deleteBtn { background:#dc2626; color:white; } .deleteBtn:hover { background:#b91c1c; }
-.closeEventModal {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: transparent;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: #555;
-  z-index: 2;
-}
-.fc-event {
-    padding: 4px 8px;
-}
-.fc-event-title { 
-    display:block; 
-    font-weight:bold; 
-    font-size: 1rem;
-    margin-bottom: 4px;
-}
-.fc-event-description { 
-    display:block; 
-    font-size:0.85rem; 
-    color:#333; 
-}
-@media(max-width:600px){ .fc-timeGridWeek-view,.fc-timeGridDay-view{ font-size:0.8rem; } .fc-toolbar-chunk{ flex-wrap:wrap; justify-content:center; } }
-#customAlert { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:1000; }
-#customAlert .alertContent { background:white; padding:20px; border-radius:12px; max-width:300px; text-align:center; box-shadow:0 4px 10px rgba(0,0,0,0.3); }
-#customAlert button { margin-top:15px; background:#2563eb; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; }
-#customAlert button:hover { background:#1e40af; }
-#calendar { 
-    max-width: 1200px; 
-    margin: 20px auto;
-    padding: 20px;
-}
+    <style>
+        body { margin: 0; font-family: "Segoe UI", sans-serif; background: #f9fafb; }
+        header { 
+            background: #2563eb; 
+            color: white; 
+            padding: 20px; 
+            text-align: center; 
+            font-weight: bold; 
+            font-size: 1.5rem; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+        #calendar-container {
+            position: relative;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        #calendar { 
+            max-width: 100%;
+        }
+        #addEventBtn { 
+            position: fixed; 
+            bottom: 20px; 
+            right: 20px; 
+            background: #2563eb; 
+            color: white; 
+            border: none; 
+            border-radius: 50%; 
+            width: 55px; 
+            height: 55px; 
+            font-size: 2rem; 
+            cursor: pointer; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2); 
+            z-index: 10000; /* Aumentato per assicurare che stia sempre sopra */
+        }
+        #addEventBtn:hover { background: #1e40af; }
+        .modal { 
+            display: none; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(0,0,0,0.5); 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 10001; 
+        }
+        #apiKeyModal { z-index: 10002; }
+        .modal-content, .eventModalContent { 
+            background: white; 
+            padding: 30px; 
+            border-radius: 14px; 
+            width: 90%; 
+            max-width: 500px; 
+            position: relative; 
+            box-shadow: 0 6px 16px rgba(0,0,0,0.2); 
+            animation: fadeIn 0.2s ease-in-out; 
+        }
+        @keyframes fadeIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-content input, .modal-content textarea {
+            padding: 12px;
+            margin: 12px 0;
+            font-size: 1rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button { 
+            margin-top: 10px; 
+            width: 100%; 
+            padding: 12px; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 1rem; 
+            cursor: pointer; 
+            transition: background 0.15s; 
+        }
+        button:hover { background: #1e40af; }
+        .saveBtn { background: #2563eb; color: white; }
+        .saveBtn:hover { background: #1e40af; }
+        .cancelBtn { background: #e5e7eb; }
+        .cancelBtn:hover { background: #d1d5db; }
+        .deleteBtn { background: #dc2626; color: white; }
+        .deleteBtn:hover { background: #b91c1c; }
+        .closeEventModal {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: transparent;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #555;
+            width: auto;
+            padding: 5px;
+        }
+        .closeEventModal:hover {
+            background: transparent;
+        }
+        .fc-event {
+            padding: 4px 8px;
+        }
+        .fc-event-title { 
+            display: block; 
+            font-weight: bold; 
+            font-size: 1rem;
+            margin-bottom: 4px;
+        }
+        .fc-event-description { 
+            display: block; 
+            font-size: 0.85rem; 
+            color: #333; 
+        }
+        @media (max-width: 600px) {
+            .fc { font-size: 0.85rem; }
+            
+            /* Migliora la visualizzazione della toolbar */
+            .fc .fc-toolbar.fc-header-toolbar {
+                margin-bottom: 0.5em;
+                display: flex !important;
+                flex-direction: row !important;
+                align-items: center;
+                padding: 0 5px;
+            }
 
-.modal-content, .eventModalContent { 
-    max-width: 500px;
-    padding: 30px;
-}
+            /* Gestisci la dimensione del container */
+            #calendar-container {
+                padding: 5px;
+                margin: 5px;
+                max-width: 95vw;
+            }
 
-.modal-content input, .modal-content textarea {
-    padding: 12px;
-    margin: 12px 0;
-    font-size: 1rem;
-}
+            /* Allinea i bottoni della toolbar */
+            .fc-header-toolbar .fc-toolbar-chunk {
+                display: flex;
+                align-items: center;
+                gap: 5px;
+            }
 
-.form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 15px;
-}
+            /* Riduci la dimensione del titolo */
+            .fc .fc-toolbar-title {
+                font-size: 1em;
+            }
 
-.full-width {
-    grid-column: 1 / -1;
-}
+            /* Riduci lo spazio tra le celle */
+            .fc .fc-daygrid-day {
+                padding: 2px !important;
+            }
 
-.button-group {
-    display: flex;
-    gap: 10px;
-    margin-top: 20px;
-}
+            /* Riduci la dimensione delle celle */
+            .fc td, .fc th {
+                padding: 1px !important;
+            }
 
-.button-group button {
-    margin: 0;
-    flex: 1;
-}
+            /* Riduci la dimensione del testo nelle celle */
+            .fc-daygrid-day-number {
+                font-size: 0.8em;
+                padding: 2px !important;
+            }
 
-header {
-    padding: 20px;
-    font-size: 1.5rem;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-}
+            /* Riduci la dimensione dei bottoni */
+            .fc .fc-button {
+                padding: 0.2em 0.4em;
+                font-size: 0.8em;
+            }
 
-.fc-event {
-    padding: 4px 8px;
-}
+            /* Nascondi il bottone "today" nel gruppo destro */
+            .fc-toolbar-chunk:last-child .fc-today-button {
+                display: none !important;
+            }
 
-.fc-event-title {
-    font-size: 1rem;
-    margin-bottom: 4px;
-}
+            /* Sposta il bottone "today" nel gruppo sinistro */
+            .fc-toolbar-chunk:first-child .fc-today-button {
+                display: inline-block !important;
+                order: 2;
+            }
 
-.fc-event-description {
-    font-size: 0.85rem;
-}
+            /* Sistema l'ordine dei bottoni nel gruppo sinistro */
+            .fc-toolbar-chunk:first-child {
+                display: flex !important;
+                gap: 4px;
+            }
 
-.time-select {
-    width: 100%;
-    padding: 12px;
-    margin: 12px 0;
-    font-size: 1rem;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    background-color: white;
-}
+            .fc-toolbar-chunk:first-child .fc-prev-button {
+                order: 1;
+            }
 
-.time-select:focus {
-    outline: none;
-    border-color: #2563eb;
-}
-
-/* Aggiungi questa nuova regola */
-#addEventBtn * {
-    pointer-events: none;
-    transform: none !important;
-    transition: none !important;
-}
-</style>
+            .fc-toolbar-chunk:first-child .fc-next-button {
+                order: 3;
+            }
+        }
+        #customAlert { 
+            display: none; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(0,0,0,0.5); 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 10001; 
+        }
+        #customAlert .alertContent { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 12px; 
+            max-width: 300px; 
+            text-align: center; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3); 
+        }
+        #customAlert button { 
+            margin-top: 15px; 
+            background: #2563eb; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+        }
+        #customAlert button:hover { background: #1e40af; }
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .full-width {
+            grid-column: 1 / -1;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .button-group button {
+            margin: 0;
+            flex: 1;
+        }
+        .time-select {
+            width: 100%;
+            padding: 12px;
+            margin: 12px 0;
+            font-size: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: white;
+        }
+        .time-select:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+        #addEventBtn * {
+            pointer-events: none;
+        }
+    </style>
 </head>
 <body>
-<header>📅 Calendario della Classe</header>
-<div id="calendar"></div>
-<button id="addEventBtn">+</button>
-
-<div id="eventModal" class="modal">
-  <div class="modal-content">
-    <h2>Nuovo Evento</h2>
-    <div class="form-grid">
-      <div class="full-width">
-        <input type="text" id="eventTitle" placeholder="Titolo (obbligatorio)">
-      </div>
-      <div class="full-width">
-        <textarea id="eventDesc" placeholder="Descrizione (opzionale)"></textarea>
-      </div>
-      <div>
-        <input type="date" id="eventDate">
-      </div>
-      <div>
-        <select id="eventStartTime" class="time-select">
-          <option value="">Seleziona ora inizio</option>
-          <option value="08:00">1° ora (8:00-9:00)</option>
-          <option value="09:00">2° ora (9:00-10:00)</option>
-          <option value="10:00">3° ora (10:00-11:00)</option>
-          <option value="11:00">4° ora (11:00-12:00)</option>
-          <option value="12:00">5° ora (12:00-13:00)</option>
-          <option value="13:00">6° ora (13:00-14:00)</option>
-        </select>
-      </div>
-      <div>
-        <select id="eventEndTime" class="time-select">
-          <option value="">Seleziona ora fine</option>
-          <option value="09:00">1° ora (8:00-9:00)</option>
-          <option value="10:00">2° ora (9:00-10:00)</option>
-          <option value="11:00">3° ora (10:00-11:00)</option>
-          <option value="12:00">4° ora (11:00-12:00)</option>
-          <option value="13:00">5° ora (12:00-13:00)</option>
-          <option value="14:00">6° ora (13:00-14:00)</option>
-        </select>
-      </div>
-      <div class="full-width button-group">
-        <button class="saveBtn" id="saveEvent">Salva</button>
-        <button class="cancelBtn" id="cancelEvent">Annulla</button>
-      </div>
+    <header>📅 Calendario della Classe</header>
+    <div id="calendar-container">
+        <div id="calendar"></div>
     </div>
-  </div>
-</div>
+    <button id="addEventBtn">+</button>
 
-<div id="eventViewModal" class="modal">
-  <div class="eventModalContent">
-    <button class="closeEventModal" id="closeEventModal">✖</button>
-    <h3 id="viewTitle"></h3>
-    <p id="viewTime"></p>
-    <p id="viewDesc"></p>
-    <button class="deleteBtn" id="deleteEventBtn">🗑 Elimina Evento</button>
-  </div>
-</div>
+    <div id="apiKeyModal" class="modal">
+        <div class="modal-content">
+            <h2>Inserisci la chiave API</h2>
+            <input type="text" id="apiKeyInput" placeholder="Chiave API">
+            <div class="button-group">
+                <button id="submitApiKey" class="saveBtn">Conferma</button>
+                <button id="cancelApiKey" class="cancelBtn">Annulla</button>
+            </div>
+        </div>
+    </div>
 
-<div id="customAlert">
-  <div class="alertContent">
-    <p id="alertMessage"></p>
-    <button onclick="closeCustomAlert()">Chiudi</button>
-  </div>
-</div>
+    <div id="eventModal" class="modal">
+        <div class="modal-content">
+            <h2>Nuovo Evento</h2>
+            <div class="form-grid">
+                <div class="full-width">
+                    <input type="text" id="eventTitle" placeholder="Titolo (obbligatorio)">
+                </div>
+                <div class="full-width">
+                    <textarea id="eventDesc" placeholder="Descrizione (opzionale)"></textarea>
+                </div>
+                <div>
+                    <input type="date" id="eventDate">
+                </div>
+                <div>
+                    <select id="eventStartTime" class="time-select">
+                        <option value="">Seleziona ora inizio</option>
+                        <option value="08:00">Prima ora (8:00)</option>
+                        <option value="09:00">Seconda ora (9:00)</option>
+                        <option value="10:00">Terza ora (10:00)</option>
+                        <option value="11:00">Quarta ora (11:00)</option>
+                        <option value="12:00">Quinta ora (12:00)</option>
+                        <option value="13:00">Sesta ora (13:00)</option>
+                    </select>
+                </div>
+                <div>
+                    <select id="eventEndTime" class="time-select">
+                        <option value="">Seleziona ora fine</option>
+                        <option value="09:00">Prima ora (9:00)</option>
+                        <option value="10:00">Seconda ora (10:00)</option>
+                        <option value="11:00">Terza ora (11:00)</option>
+                        <option value="12:00">Quarta ora (12:00)</option>
+                        <option value="13:00">Quinta ora (13:00)</option>
+                        <option value="14:00">Sesta ora (14:00)</option>
+                    </select>
+                </div>
+                <div class="full-width button-group">
+                    <button class="saveBtn" id="saveEvent">Salva</button>
+                    <button class="cancelBtn" id="cancelEvent">Annulla</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<script>
-const API_URL = "https://asdlajdkja.mx-labs.net/api/events";
+    <div id="eventViewModal" class="modal">
+        <div class="eventModalContent">
+            <button class="closeEventModal" id="closeEventModal">✖</button>
+            <h3 id="viewTitle"></h3>
+            <p id="viewTime"></p>
+            <p id="viewDesc"></p>
+            <button class="deleteBtn" id="deleteEventBtn">🗑 Elimina Evento</button>
+        </div>
+    </div>
 
-function showCustomAlert(msg){
-  document.getElementById('alertMessage').textContent = msg;
-  document.getElementById('customAlert').style.display='flex';
-}
-function closeCustomAlert(){
-  document.getElementById('customAlert').style.display='none';
-}
+    <div id="customAlert">
+        <div class="alertContent">
+            <p id="alertMessage"></p>
+            <button onclick="closeCustomAlert()">Chiudi</button>
+        </div>
+    </div>
 
-document.addEventListener('DOMContentLoaded', function(){
-  const calendarEl = document.getElementById('calendar');
-  const addModal = document.getElementById('eventModal');
-  const addBtn = document.getElementById('addEventBtn');
-  const saveBtn = document.getElementById('saveEvent');
-  const cancelBtn = document.getElementById('cancelEvent');
+    <script>
+        const API_URL = 'https://asdlajdkja.mx-labs.net/api/events';
+        let calendar = null;
+        let pendingEvent = null;
+        let pendingDeleteEvent = null;
 
-  const eventViewModal = document.getElementById('eventViewModal');
-  const viewTitle = document.getElementById('viewTitle');
-  const viewDesc = document.getElementById('viewDesc');
-  const viewTime = document.getElementById('viewTime');
-  const closeEventModalBtn = document.getElementById('closeEventModal');
-  const deleteEventBtn = document.getElementById('deleteEventBtn');
+        function showCustomAlert(msg) {
+            document.getElementById('alertMessage').textContent = msg;
+            document.getElementById('customAlert').style.display = 'flex';
+        }
 
-  let selectedEvent = null;
+        function closeCustomAlert() {
+            document.getElementById('customAlert').style.display = 'none';
+        }
 
-  const calendar = new FullCalendar.Calendar(calendarEl,{
-    initialView:'dayGridMonth',
-    locale:'it',
-    selectable:true,
-    editable:true,
-    headerToolbar:{
-      left:"prev,next today",
-      center:"title",
-      right:"dayGridMonth,timeGridWeek,timeGridDay"
-    },
-    events: async (fetchInfo,successCallback,failureCallback)=>{
-      try{
-        const res = await fetch(API_URL);
-        const data = await res.json();
-        const events = data.map(ev=>({...ev,extendedProps:{description:ev.description||""}}));
-        successCallback(events);
-      }catch(err){ failureCallback(err);}
-    },
-    eventContent: arg => ({ html:`<span class="fc-event-title">${arg.event.title}</span><span class="fc-event-description">${arg.event.extendedProps.description||''}</span>`}),
-    eventClick: info=>{
-      selectedEvent = info.event;
-      viewTitle.textContent = selectedEvent.title;
-      viewDesc.textContent = selectedEvent.extendedProps.description || "(nessuna descrizione)";
-      const startTime = selectedEvent.start ? selectedEvent.start.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : "";
-      const endTime = selectedEvent.end ? selectedEvent.end.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : "";
-      viewTime.textContent = endTime ? `Dalle ${startTime} alle ${endTime}` : `Alle ${startTime}`;
-      eventViewModal.style.display='flex';
-    },
-    dateClick: async info=>{
-      const dateStr = info.dateStr;
-      try{
-        const res = await fetch(API_URL);
-        const data = await res.json();
-        const eventsOfDay = data.filter(ev=>ev.start.startsWith(dateStr));
-        if(eventsOfDay.length>0){
-          const message = eventsOfDay.map(ev=>`${ev.title}${ev.description ? ' - '+ev.description : ''}`).join('\n');
-          showCustomAlert(`Eventi del ${dateStr}:\n\n${message}`);
-        } else showCustomAlert(`Nessun evento per il ${dateStr}`);
-      }catch(err){ showCustomAlert("Errore nel caricamento degli eventi"); }
-    }
-  });
+        document.addEventListener('DOMContentLoaded', () => {
+            const calendarContainer = document.getElementById('calendar-container');
+            const addBtn = document.getElementById('addEventBtn');
+            const addModal = document.getElementById('eventModal');
+            const saveBtn = document.getElementById('saveEvent');
+            const cancelBtn = document.getElementById('cancelEvent');
+            const apiKeyModal = document.getElementById('apiKeyModal');
+            const submitApiKeyBtn = document.getElementById('submitApiKey');
+            const cancelApiKeyBtn = document.getElementById('cancelApiKey');
+            const eventViewModal = document.getElementById('eventViewModal');
+            const viewTitle = document.getElementById('viewTitle');
+            const viewDesc = document.getElementById('viewDesc');
+            const viewTime = document.getElementById('viewTime');
+            const closeEventModalBtn = document.getElementById('closeEventModal');
+            const deleteEventBtn = document.getElementById('deleteEventBtn');
 
-  calendar.render();
+            // Inizializza il calendario all'avvio
+            initializeCalendar();
 
-  addBtn.onclick = ()=>addModal.style.display='flex';
-  cancelBtn.onclick = ()=>addModal.style.display='none';
+            async function getEventCount() {
+                try {
+                    const res = await fetch(API_URL);
+                    const data = await res.json();
+                    return data.count;
+                } catch (err) {
+                    return 0;
+                }
+            }
 
-  saveBtn.onclick = async ()=>{
-    const title = document.getElementById('eventTitle').value.trim();
-    const description = document.getElementById('eventDesc').value.trim();
-    const date = document.getElementById('eventDate').value;
-    const startTime = document.getElementById('eventStartTime').value;
-    const endTime = document.getElementById('eventEndTime').value;
-    if(!title||!date||!startTime) return showCustomAlert("Titolo, data e ora inizio obbligatori!");
+            function initializeCalendar() {
+                calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+                    initialView: 'dayGridMonth',
+                    locale: 'it',
+                    selectable: true,
+                    editable: false, // Disabilitiamo il drag and drop
+                    headerToolbar: {
+                        left: 'prev,next today',
+                        center: 'title',
+                        right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                    },
+                    events: async (fetchInfo, successCallback, failureCallback) => {
+                        try {
+                            const res = await fetch(`${API_URL}/all`);
+                            const data = await res.json();
+                            const events = data.map(ev => ({
+                                id: ev.id,
+                                title: ev.title,
+                                start: ev.start,
+                                end: ev.end,
+                                description: ev.description || '',
+                                extendedProps: { 
+                                    description: ev.description || ''
+                                }
+                            }));
 
-    const start = `${date}T${startTime}`;
-    const end = endTime ? `${date}T${endTime}` : null;
+                            if (calendar.view.type === 'dayGridMonth') {
+                                // Per la vista mensile, raggruppa gli eventi per data
+                                const eventsByDate = events.reduce((acc, event) => {
+                                    const date = event.start.split('T')[0];
+                                    if (!acc[date]) {
+                                        acc[date] = {
+                                            start: date,
+                                            title: '1 evento',
+                                            display: 'block',
+                                            extendedProps: { 
+                                                count: 1,
+                                                events: [event] // Memorizza l'evento originale
+                                            }
+                                        };
+                                    } else {
+                                        acc[date].extendedProps.count++;
+                                        acc[date].title = `${acc[date].extendedProps.count} eventi`;
+                                        acc[date].extendedProps.events.push(event);
+                                    }
+                                    return acc;
+                                }, {});
 
-    try{
-      const res = await fetch(API_URL,{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({title,description,start,end})
-      });
-      const newEvent = await res.json();
+                                successCallback(Object.values(eventsByDate));
+                            } else {
+                                // Per le viste giornaliere e settimanali, mostra gli eventi normali
+                                successCallback(events);
+                            }
+                        } catch (err) {
+                            failureCallback(err);
+                            console.error('Errore nel caricamento degli eventi:', err);
+                        }
+                    },
+                    eventContent: arg => {
+                        if (arg.view.type === 'dayGridMonth') {
+                            if (arg.event.display !== 'background') {
+                                const count = arg.event.extendedProps.count;
+                                return {
+                                    html: `<span class="fc-event-title">${count} ${count === 1 ? 'evento' : 'eventi'}</span>`
+                                };
+                            }
+                            return {};
+                        } else {
+                            // Vista giornaliera
+                            return {
+                                html: `<div class="fc-event-main">
+                                         <span class="fc-event-title">${arg.event.title}</span>
+                                       </div>`
+                            };
+                        }
+                    },
+                    dateClick: function(info) {
+                        if (calendar.view.type === 'dayGridMonth') {
+                            calendar.changeView('timeGridDay', info.dateStr);
+                        }
+                    },
+                    eventClick: function(info) {
+                        if (calendar.view.type === 'dayGridMonth') {
+                            // Cambia vista e vai al giorno dell'evento
+                            const date = info.event.start;
+                            calendar.changeView('timeGridDay', date);
+                            
+                            // Se ci sono eventi memorizzati, aggiungili alla vista giornaliera
+                            if (info.event.extendedProps.events) {
+                                info.event.extendedProps.events.forEach(event => {
+                                    if (!calendar.getEventById(event.id)) {
+                                        calendar.addEvent({
+                                            id: event.id,
+                                            title: event.title,
+                                            start: event.start,
+                                            end: event.end,
+                                            extendedProps: {
+                                                description: event.description
+                                            }
+                                        });
+                                    }
+                                });
+                            }
+                        } else if (info.event.display !== 'background') {
+                            // Mostra il popup con i dettagli dell'evento
+                            pendingDeleteEvent = info.event;
+                            viewTitle.textContent = pendingDeleteEvent.title;
+                            viewDesc.textContent = pendingDeleteEvent.extendedProps.description || '(nessuna descrizione)';
+                            const startTime = pendingDeleteEvent.start ? pendingDeleteEvent.start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+                            const endTime = pendingDeleteEvent.end ? pendingDeleteEvent.end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+                            viewTime.textContent = endTime ? `Dalle ${startTime} alle ${endTime}` : `Alle ${startTime}`;
+                            eventViewModal.style.display = 'flex';
+                        }
+                    },
+                    slotMinTime: '00:00:00',
+                    slotMaxTime: '24:00:00',
+                    slotDuration: '00:30:00',  // Cambiato da '01:00:00' a '00:30:00' per avere 2 tacche per ora
+                    slotLabelInterval: '01:00:00', // Aggiunto per mostrare le etichette delle ore ogni ora
+                    allDaySlot: false,
+                    eventTimeFormat: {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false
+                    },
+                    height: 'auto', // Aggiunto per assicurare che tutti gli slot siano visibili
+                    slotEventOverlap: false, // Impedisce la sovrapposizione degli eventi
+                    displayEventTime: true, // Mostra sempre l'orario degli eventi
+                    slotLabelFormat: {  // Formattazione delle etichette degli slot
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: false
+                    },
+                });
+                calendar.render();
+            }
 
-      calendar.addEvent({
-        id:newEvent.id,
-        title:newEvent.title,
-        start:newEvent.start,
-        end:newEvent.end,
-        extendedProps:{description:newEvent.description}
-      });
+            addBtn.onclick = () => addModal.style.display = 'flex';
+            cancelBtn.onclick = () => addModal.style.display = 'none';
 
-      document.getElementById('eventTitle').value='';
-      document.getElementById('eventDesc').value='';
-      document.getElementById('eventDate').value='';
-      document.getElementById('eventStartTime').value='';
-      document.getElementById('eventEndTime').value='';
-      addModal.style.display='none';
-      showCustomAlert("Evento aggiunto con successo!");
+            saveBtn.onclick = () => {
+                const title = document.getElementById('eventTitle').value.trim();
+                const description = document.getElementById('eventDesc').value.trim();
+                const date = document.getElementById('eventDate').value;
+                const startTime = document.getElementById('eventStartTime').value;
+                const endTime = document.getElementById('eventEndTime').value;
+                if (!title || !date || !startTime) return showCustomAlert('Titolo, data e ora inizio obbligatori!');
 
-    }catch(err){ console.error(err); showCustomAlert("Errore nell'aggiunta dell'evento"); }
-  };
+                pendingEvent = { title, description, start: `${date}T${startTime}`, end: endTime ? `${date}T${endTime}` : null };
+                apiKeyModal.style.display = 'flex';
+            };
 
-  closeEventModalBtn.onclick = ()=>eventViewModal.style.display='none';
+            submitApiKeyBtn.onclick = async () => {
+                const apiKey = document.getElementById('apiKeyInput').value.trim();
+                if (pendingEvent) {
+                    // Creazione evento
+                    try {
+                        const res = await fetch(API_URL, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-API-Key': apiKey
+                            },
+                            body: JSON.stringify(pendingEvent)
+                        });
+                        const newEvent = await res.json();
+                        if (res.ok) {
+                            calendar.addEvent({
+                                id: newEvent.id,
+                                title: newEvent.title,
+                                start: newEvent.start,
+                                end: newEvent.end,
+                                extendedProps: { description: newEvent.description }
+                            });
+                            document.getElementById('eventTitle').value = '';
+                            document.getElementById('eventDesc').value = '';
+                            document.getElementById('eventDate').value = '';
+                            document.getElementById('eventStartTime').value = '';
+                            document.getElementById('eventEndTime').value = '';
+                            document.getElementById('apiKeyInput').value = '';
+                            addModal.style.display = 'none';
+                            apiKeyModal.style.display = 'none';
+                            pendingEvent = null;
+                            showCustomAlert('Evento aggiunto con successo!');
+                        } else {
+                            showCustomAlert('Errore: ' + newEvent.error);
+                        }
+                    } catch (err) {
+                        showCustomAlert('Errore di connessione');
+                    }
+                } else if (pendingDeleteEvent) {
+                    // Eliminazione evento
+                    try {
+                        const res = await fetch(`${API_URL}/${pendingDeleteEvent.id}`, {
+                            method: 'DELETE',
+                            headers: { 'X-API-Key': apiKey }
+                        });
+                        if (res.ok) {
+                            pendingDeleteEvent.remove();
+                            eventViewModal.style.display = 'none';
+                            document.getElementById('apiKeyInput').value = '';
+                            apiKeyModal.style.display = 'none';
+                            pendingDeleteEvent = null;
+                            showCustomAlert('Evento eliminato con successo!');
+                        } else {
+                            showCustomAlert('Errore: ' + (await res.json()).error);
+                        }
+                    } catch (err) {
+                        showCustomAlert('Errore di connessione');
+                    }
+                }
+            };
 
-  deleteEventBtn.onclick = async ()=>{
-    if(!selectedEvent) return;
-    if(!confirm(`Vuoi davvero eliminare l'evento "${selectedEvent.title}"?`)) return;
+            cancelApiKeyBtn.onclick = () => {
+                apiKeyModal.style.display = 'none';
+                document.getElementById('apiKeyInput').value = '';
+                pendingEvent = null;
+                pendingDeleteEvent = null;
+            };
 
-    try{
-      await fetch(`${API_URL}/${selectedEvent.id}`, {method:"DELETE"});
-      selectedEvent.remove();
-      eventViewModal.style.display='none';
-      selectedEvent=null;
-      showCustomAlert("Evento eliminato con successo!");
-    }catch(err){ console.error(err); showCustomAlert("Errore nell'eliminazione evento"); }
-  };
+            closeEventModalBtn.onclick = () => {
+                eventViewModal.style.display = 'none';
+                pendingDeleteEvent = null;
+            };
 
-  window.onclick = e=>{
-    if(e.target==addModal) addModal.style.display='none';
-    if(e.target==eventViewModal) eventViewModal.style.display='none';
-    if(e.target==document.getElementById('customAlert')) closeCustomAlert();
-  };
-});
-</script>
+            deleteEventBtn.onclick = () => {
+                if (!pendingDeleteEvent) return;
+                const modal = document.createElement('div');
+                modal.className = 'modal';
+                modal.style.display = 'flex';
+                modal.style.zIndex = '10003';
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <h2>Conferma eliminazione</h2>
+                        <p>Sei sicuro di voler eliminare l'evento "${pendingDeleteEvent.title}"?</p>
+                        <div class="button-group">
+                            <button class="deleteBtn" id="confirmDelete">Elimina</button>
+                            <button class="cancelBtn" id="cancelDelete">Annulla</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+
+                document.getElementById('confirmDelete').onclick = () => {
+                    modal.remove();
+                    eventViewModal.style.display = 'none';
+                    apiKeyModal.style.display = 'flex';
+                };
+
+                document.getElementById('cancelDelete').onclick = () => {
+                    modal.remove();
+                };
+
+                modal.onclick = (e) => {
+                    if (e.target === modal) {
+                        modal.remove();
+                    }
+                };
+            };
+
+            window.onclick = e => {
+                if (e.target == addModal) addModal.style.display = 'none';
+                if (e.target == eventViewModal) eventViewModal.style.display = 'none';
+                if (e.target == apiKeyModal) {
+                    apiKeyModal.style.display = 'none';
+                    document.getElementById('apiKeyInput').value = '';
+                    pendingEvent = null;
+                    pendingDeleteEvent = null;
+                }
+                if (e.target == document.getElementById('customAlert')) closeCustomAlert();
+            };
+        });
+    </script>
 </body>
 </html>

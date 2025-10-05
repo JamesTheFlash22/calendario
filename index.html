@@ -527,6 +527,13 @@
                     },
                 });
                 calendar.render();
+
+            // Aggiorna gli eventi ogni 3 secondi
+            setInterval(() => {
+                if (calendar) {
+                    calendar.refetchEvents();
+                }
+            }, 3000);
             }
 
             addBtn.onclick = () => addModal.style.display = 'flex';

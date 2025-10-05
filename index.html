@@ -161,6 +161,21 @@ header {
     font-size: 0.85rem;
 }
 
+.time-select {
+    width: 100%;
+    padding: 12px;
+    margin: 12px 0;
+    font-size: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: white;
+}
+
+.time-select:focus {
+    outline: none;
+    border-color: #2563eb;
+}
+
 /* Aggiungi questa nuova regola */
 #addEventBtn * {
     pointer-events: none;
@@ -188,10 +203,26 @@ header {
         <input type="date" id="eventDate">
       </div>
       <div>
-        <input type="time" id="eventStartTime">
+        <select id="eventStartTime" class="time-select">
+          <option value="">Seleziona ora inizio</option>
+          <option value="08:00">1° ora (8:00-9:00)</option>
+          <option value="09:00">2° ora (9:00-10:00)</option>
+          <option value="10:00">3° ora (10:00-11:00)</option>
+          <option value="11:00">4° ora (11:00-12:00)</option>
+          <option value="12:00">5° ora (12:00-13:00)</option>
+          <option value="13:00">6° ora (13:00-14:00)</option>
+        </select>
       </div>
       <div>
-        <input type="time" id="eventEndTime">
+        <select id="eventEndTime" class="time-select">
+          <option value="">Seleziona ora fine</option>
+          <option value="09:00">1° ora (8:00-9:00)</option>
+          <option value="10:00">2° ora (9:00-10:00)</option>
+          <option value="11:00">3° ora (10:00-11:00)</option>
+          <option value="12:00">4° ora (11:00-12:00)</option>
+          <option value="13:00">5° ora (12:00-13:00)</option>
+          <option value="14:00">6° ora (13:00-14:00)</option>
+        </select>
       </div>
       <div class="full-width button-group">
         <button class="saveBtn" id="saveEvent">Salva</button>

@@ -25,7 +25,7 @@ button:hover { transform:translateY(-1px); }
 .closeEventModal {
   position: absolute;
   top: 10px;
-  right: 10px; /* piccolo margine dal bordo destro */
+  right: 10px;
   background: transparent;
   border: none;
   font-size: 1.5rem;
@@ -36,10 +36,16 @@ button:hover { transform:translateY(-1px); }
 .fc-event-title { display:block; font-weight:bold; }
 .fc-event-description { display:block; font-size:0.75rem; color:#333; }
 @media(max-width:600px){ .fc-timeGridWeek-view,.fc-timeGridDay-view{ font-size:0.8rem; } .fc-toolbar-chunk{ flex-wrap:wrap; justify-content:center; } }
+
+/* Popup custom per messaggi */
+#customAlert { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:1000; }
+#customAlert .alertContent { background:white; padding:20px; border-radius:12px; max-width:300px; text-align:center; box-shadow:0 4px 10px rgba(0,0,0,0.3); }
+#customAlert button { margin-top:15px; background:#2563eb; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; }
+#customAlert button:hover { background:#1e40af; }
 </style>
 </head>
 <body>
-<header>📅 Calendario Classe</header>
+<header>📅 Calendario della Classe</header>
 <div id="calendar"></div>
 <button id="addEventBtn">+</button>
 
@@ -68,8 +74,24 @@ button:hover { transform:translateY(-1px); }
   </div>
 </div>
 
+<!-- Popup custom messaggi -->
+<div id="customAlert">
+  <div class="alertContent">
+    <p id="alertMessage"></p>
+    <button onclick="closeCustomAlert()">Chiudi</button>
+  </div>
+</div>
+
 <script>
-const API_URL = "https://asdlajdkja.mx-labs.net/api/events";
+const API_URL = "https://https://asdlajdkja.mx-labs.net/api/events";
+
+function showCustomAlert(msg){
+  document.getElementById('alertMessage').textContent = msg;
+  document.getElementById('customAlert').style.display='flex';
+}
+function closeCustomAlert(){
+  document.getElementById('customAlert').style.display='none';
+}
 
 document.addEventListener('DOMContentLoaded', function(){
   const calendarEl = document.getElementById('calendar');
@@ -117,13 +139,15 @@ document.addEventListener('DOMContentLoaded', function(){
     },
     dateClick: async info=>{
       const dateStr = info.dateStr;
-      const res = await fetch(API_URL);
-      const data = await res.json();
-      const eventsOfDay = data.filter(ev=>ev.start.startsWith(dateStr));
-      if(eventsOfDay.length>0){
-        const message = eventsOfDay.map(ev=>`${ev.title}${ev.description ? ' - '+ev.description : ''}`).join('\n');
-        alert(`Eventi del ${dateStr}:\n\n${message}`);
-      } else alert(`Nessun evento per il ${dateStr}`);
+      try{
+        const res = await fetch(API_URL);
+        const data = await res.json();
+        const eventsOfDay = data.filter(ev=>ev.start.startsWith(dateStr));
+        if(eventsOfDay.length>0){
+          const message = eventsOfDay.map(ev=>`${ev.title}${ev.description ? ' - '+ev.description : ''}`).join('\n');
+          showCustomAlert(`Eventi del ${dateStr}:\n\n${message}`);
+        } else showCustomAlert(`Nessun evento per il ${dateStr}`);
+      }catch(err){ showCustomAlert("Errore nel caricamento degli eventi"); }
     }
   });
 
@@ -138,7 +162,7 @@ document.addEventListener('DOMContentLoaded', function(){
     const date = document.getElementById('eventDate').value;
     const startTime = document.getElementById('eventStartTime').value;
     const endTime = document.getElementById('eventEndTime').value;
-    if(!title||!date||!startTime) return alert("Titolo, data e ora inizio obbligatori!");
+    if(!title||!date||!startTime) return showCustomAlert("Titolo, data e ora inizio obbligatori!");
 
     const start = `${date}T${startTime}`;
     const end = endTime ? `${date}T${endTime}` : null;
@@ -165,8 +189,9 @@ document.addEventListener('DOMContentLoaded', function(){
       document.getElementById('eventStartTime').value='';
       document.getElementById('eventEndTime').value='';
       addModal.style.display='none';
+      showCustomAlert("Evento aggiunto con successo!");
 
-    }catch(err){ console.error(err); alert("Errore nell'aggiunta dell'evento"); }
+    }catch(err){ console.error(err); showCustomAlert("Errore nell'aggiunta dell'evento"); }
   };
 
   closeEventModalBtn.onclick = ()=>eventViewModal.style.display='none';
@@ -180,12 +205,14 @@ document.addEventListener('DOMContentLoaded', function(){
       selectedEvent.remove();
       eventViewModal.style.display='none';
       selectedEvent=null;
-    }catch(err){ console.error(err); alert("Errore nell'eliminazione evento"); }
+      showCustomAlert("Evento eliminato con successo!");
+    }catch(err){ console.error(err); showCustomAlert("Errore nell'eliminazione evento"); }
   };
 
   window.onclick = e=>{
     if(e.target==addModal) addModal.style.display='none';
     if(e.target==eventViewModal) eventViewModal.style.display='none';
+    if(e.target==document.getElementById('customAlert')) closeCustomAlert();
   };
 });
 </script>

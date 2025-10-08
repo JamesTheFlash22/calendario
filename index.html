@@ -6,292 +6,33 @@
     <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>Calendario della Classe</title>
-    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
-
-    <style>
-        body { margin: 0; font-family: "Segoe UI", sans-serif; background: #f9fafb; }
-        header { 
-            background: #2563eb; 
-            color: white; 
-            padding: 20px; 
-            text-align: center; 
-            font-weight: bold; 
-            font-size: 1.5rem; 
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-        }
-        #calendar-container {
-            position: relative;
-            max-width: 1200px;
-            margin: 20px auto;
-            padding: 20px;
-        }
-        #calendar { 
-            max-width: 100%;
-        }
-        #addEventBtn { 
-            position: fixed; 
-            bottom: 20px; 
-            right: 20px; 
-            background: #2563eb; 
-            color: white; 
-            border: none; 
-            border-radius: 50%; 
-            width: 55px; 
-            height: 55px; 
-            font-size: 2rem; 
-            cursor: pointer; 
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2); 
-            z-index: 10000; /* Aumentato per assicurare che stia sempre sopra */
-        }
-        #addEventBtn:hover { background: #1e40af; }
-        .modal { 
-            display: none; 
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%; 
-            background: rgba(0,0,0,0.5); 
-            justify-content: center; 
-            align-items: center; 
-            z-index: 10001; 
-        }
-        #apiKeyModal { 
-            z-index: 10002; 
-        }
-        .modal-content, .eventModalContent { 
-            background: white; 
-            padding: 30px; 
-            border-radius: 14px; 
-            width: 90%; 
-            max-width: 500px; 
-            position: relative; 
-            box-shadow: 0 6px 16px rgba(0,0,0,0.2); 
-            animation: fadeIn 0.2s ease-in-out; 
-        }
-        @keyframes fadeIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .modal-content input, .modal-content textarea {
-            padding: 12px;
-            margin: 12px 0;
-            font-size: 1rem;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        button { 
-            margin-top: 10px; 
-            width: 100%; 
-            padding: 12px; 
-            border: none; 
-            border-radius: 8px; 
-            font-size: 1rem; 
-            cursor: pointer; 
-            transition: background 0.15s; 
-        }
-        button:hover { background: #1e40af; }
-        .saveBtn { background: #2563eb; color: white; }
-        .saveBtn:hover { background: #1e40af; }
-        .cancelBtn { background: #e5e7eb; }
-        .cancelBtn:hover { background: #d1d5db; }
-        .deleteBtn { background: #dc2626; color: white; }
-        .deleteBtn:hover { background: #b91c1c; }
-        .closeEventModal {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: transparent;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: #555;
-            width: auto;
-            padding: 5px;
-        }
-        .closeEventModal:hover {
-            background: transparent;
-        }
-        .fc-event {
-            padding: 4px 8px;
-        }
-        .fc-event-title { 
-            display: block; 
-            font-weight: bold; 
-            font-size: 1rem;
-            margin-bottom: 4px;
-        }
-        .fc-event-description { 
-            display: block; 
-            font-size: 0.85rem; 
-            color: #333; 
-        }
-        @media (max-width: 600px) {
-            .fc { font-size: 0.85rem; }
-            
-            /* Migliora la visualizzazione della toolbar */
-            .fc .fc-toolbar.fc-header-toolbar {
-                margin-bottom: 0.5em;
-                display: flex !important;
-                flex-direction: row !important;
-                align-items: center;
-                padding: 0 5px;
-            }
-
-            /* Gestisci la dimensione del container */
-            #calendar-container {
-                padding: 5px;
-                margin: 5px;
-                max-width: 95vw;
-            }
-
-            /* Allinea i bottoni della toolbar */
-            .fc-header-toolbar .fc-toolbar-chunk {
-                display: flex;
-                align-items: center;
-                gap: 5px;
-            }
-
-            /* Riduci la dimensione del titolo */
-            .fc .fc-toolbar-title {
-                font-size: 1em;
-            }
-
-            /* Riduci lo spazio tra le celle */
-            .fc .fc-daygrid-day {
-                padding: 2px !important;
-            }
-
-            /* Riduci la dimensione delle celle */
-            .fc td, .fc th {
-                padding: 1px !important;
-            }
-
-            /* Riduci la dimensione del testo nelle celle */
-            .fc-daygrid-day-number {
-                font-size: 0.8em;
-                padding: 2px !important;
-            }
-
-            /* Riduci la dimensione dei bottoni */
-            .fc .fc-button {
-                padding: 0.2em 0.4em;
-                font-size: 0.8em;
-            }
-
-            /* Nascondi il bottone "today" nel gruppo destro */
-            .fc-toolbar-chunk:last-child .fc-today-button {
-                display: none !important;
-            }
-
-            /* Sposta il bottone "today" nel gruppo sinistro */
-            .fc-toolbar-chunk:first-child .fc-today-button {
-                display: inline-block !important;
-                order: 2;
-            }
-
-            /* Sistema l'ordine dei bottoni nel gruppo sinistro */
-            .fc-toolbar-chunk:first-child {
-                display: flex !important;
-                gap: 4px;
-            }
-
-            .fc-toolbar-chunk:first-child .fc-prev-button {
-                order: 1;
-            }
-
-            .fc-toolbar-chunk:first-child .fc-next-button {
-                order: 3;
-            }
-        }
-        #customAlert { 
-            display: none; 
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%; 
-            background: rgba(0,0,0,0.5); 
-            justify-content: center; 
-            align-items: center; 
-            z-index: 10004; /* Aumentato per stare sopra tutti gli altri modali */
-        }
-        #customAlert .alertContent { 
-            background: white; 
-            padding: 20px; 
-            border-radius: 12px; 
-            max-width: 300px; 
-            text-align: center; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3); 
-        }
-        #customAlert button { 
-            margin-top: 15px; 
-            background: #2563eb; 
-            color: white; 
-            border: none; 
-            padding: 10px 20px; 
-            border-radius: 8px; 
-            cursor: pointer; 
-        }
-        #customAlert button:hover { background: #1e40af; }
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-        .full-width {
-            grid-column: 1 / -1;
-        }
-        .button-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        .button-group button {
-            margin: 0;
-            flex: 1;
-        }
-        .time-select {
-            width: 100%;
-            padding: 12px;
-            margin: 12px 0;
-            font-size: 1rem;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            background-color: white;
-        }
-        .time-select:focus {
-            outline: none;
-            border-color: #2563eb;
-        }
-        #addEventBtn * {
-            pointer-events: none;
-        }
-    </style>
+    <title>Elenco Compiti e Verifiche</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header>📅 Calendario della Classe</header>
-    <div id="calendar-container">
-        <div id="calendar"></div>
+    <header>📋 Elenco Compiti e Verifiche</header>
+    <div id="task-container">
+        <div id="task-list"></div>
     </div>
-    <button id="addEventBtn">+</button>
+    <button id="addTaskBtn">+</button>
+    <button id="logoutBtn">🚪</button>
 
-    <div id="apiKeyModal" class="modal">
+    <div id="loginModal" class="modal">
         <div class="modal-content">
-            <h2>Inserisci la chiave API</h2>
-            <input type="text" id="apiKeyInput" placeholder="Chiave API">
+            <h2>Login Admin</h2>
+            <input type="text" id="username" placeholder="Username">
+            <input type="password" id="password" placeholder="Password">
+            <p id="loginError" style="color: red; display: none;"></p>
             <div class="button-group">
-                <button id="submitApiKey" class="saveBtn">Conferma</button>
-                <button id="cancelApiKey" class="cancelBtn">Annulla</button>
+                <button id="submitLogin" class="saveBtn">Accedi</button>
+                <button id="cancelLogin" class="cancelBtn">Annulla</button>
             </div>
         </div>
     </div>
 
     <div id="eventModal" class="modal">
         <div class="modal-content">
-            <h2>Nuovo Evento</h2>
+            <h2 id="eventModalTitle">Nuovo Compito/Verifica</h2>
             <div class="form-grid">
                 <div class="full-width">
                     <input type="text" id="eventTitle" placeholder="Titolo (obbligatorio)">
@@ -338,7 +79,8 @@
             <h3 id="viewTitle"></h3>
             <p id="viewTime"></p>
             <p id="viewDesc"></p>
-            <button class="deleteBtn" id="deleteEventBtn">🗑 Elimina Evento</button>
+            <button class="editBtn" id="editEventBtn">✏️ Modifica</button>
+            <button class="deleteBtn" id="deleteEventBtn">🗑 Elimina</button>
         </div>
     </div>
 
@@ -351,9 +93,10 @@
 
     <script>
         const API_URL = 'https://asdlajdkja.mx-labs.net/api/events';
-        let calendar = null;
-        let pendingEvent = null;
+        const API_KEY = '7391';
         let pendingDeleteEvent = null;
+        let editMode = false;
+        let editingEventId = null;
 
         function showCustomAlert(msg) {
             document.getElementById('alertMessage').textContent = msg;
@@ -364,312 +107,296 @@
             document.getElementById('customAlert').style.display = 'none';
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const calendarContainer = document.getElementById('calendar-container');
-            const addBtn = document.getElementById('addEventBtn');
-            const addModal = document.getElementById('eventModal');
-            const saveBtn = document.getElementById('saveEvent');
-            const cancelBtn = document.getElementById('cancelEvent');
-            const apiKeyModal = document.getElementById('apiKeyModal');
-            const submitApiKeyBtn = document.getElementById('submitApiKey');
-            const cancelApiKeyBtn = document.getElementById('cancelApiKey');
-            const eventViewModal = document.getElementById('eventViewModal');
-            const viewTitle = document.getElementById('viewTitle');
-            const viewDesc = document.getElementById('viewDesc');
-            const viewTime = document.getElementById('viewTime');
-            const closeEventModalBtn = document.getElementById('closeEventModal');
-            const deleteEventBtn = document.getElementById('deleteEventBtn');
+        function isLoggedIn() {
+            return !!localStorage.getItem('username');
+        }
 
-            // Inizializza il calendario all'avvio
-            initializeCalendar();
+        function showLoginModal() {
+            document.getElementById('loginModal').style.display = 'flex';
+        }
 
-            async function getEventCount() {
-                try {
-                    const res = await fetch(API_URL);
-                    const data = await res.json();
-                    return data.count;
-                } catch (err) {
-                    return 0;
-                }
+        function hideLoginModal() {
+            document.getElementById('loginModal').style.display = 'none';
+            document.getElementById('loginError').style.display = 'none';
+        }
+
+        function toggleAdminUI() {
+            const logoutBtn = document.getElementById('logoutBtn');
+            const addTaskBtn = document.getElementById('addTaskBtn');
+            if (isLoggedIn()) {
+                logoutBtn.style.display = 'block';
+                addTaskBtn.style.display = 'block';
+            } else {
+                logoutBtn.style.display = 'none';
+                addTaskBtn.style.display = 'block'; // Visibile anche per utenti non loggati
             }
+        }
 
-            function initializeCalendar() {
-                calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
-                    initialView: 'dayGridMonth',
-                    locale: 'it',
-                    selectable: true,
-                    editable: false, // Disabilitiamo il drag and drop
-                    headerToolbar: {
-                        left: 'prev,next today',
-                        center: 'title',
-                        right: 'dayGridMonth,timeGridWeek,timeGridDay'
-                    },
-                    events: async (fetchInfo, successCallback, failureCallback) => {
-                        try {
-                            const res = await fetch(`${API_URL}/all`);
-                            const data = await res.json();
-                            const events = data.map(ev => ({
-                                id: ev.id,
-                                title: ev.title,
-                                start: ev.start,
-                                end: ev.end,
-                                description: ev.description || '',
-                                extendedProps: { 
-                                    description: ev.description || ''
-                                }
-                            }));
+        async function loadTasks() {
+            const taskList = document.getElementById('task-list');
+            taskList.innerHTML = '';
+            try {
+                let headers = {};
+                if (isLoggedIn()) {
+                    headers = { 'username': localStorage.getItem('username') };
+                }
+                const res = await fetch(`${API_URL}/all`, { headers });
+                const tasks = await res.json();
+                tasks.forEach(task => {
+                    const taskItem = document.createElement('div');
+                    taskItem.className = 'task-item';
+                    const startDate = new Date(task.start).toLocaleDateString('it-IT');
+                    const startTime = new Date(task.start).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+                    const endTime = task.end ? new Date(task.end).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) : 'N/A';
+                    taskItem.innerHTML = `
+                        <div>
+                            <h3>${task.title}</h3>
+                            <p><strong>Data:</strong> ${startDate}</p>
+                            <p><strong>Orario:</strong> ${startTime} - ${endTime}</p>
+                            <p>${task.description || '(nessuna descrizione)'}</p>
+                        </div>
+                        ${isLoggedIn() ? `<button class="editBtn" data-id="${task.id}">✏️</button><button class="deleteBtn" data-id="${task.id}">🗑</button>` : ''}
+                    `;
+                    taskList.appendChild(taskItem);
+                });
 
-                            if (calendar.view.type === 'dayGridMonth') {
-                                // Per la vista mensile, raggruppa gli eventi per data
-                                const eventsByDate = events.reduce((acc, event) => {
-                                    const date = event.start.split('T')[0];
-                                    if (!acc[date]) {
-                                        acc[date] = {
-                                            start: date,
-                                            title: '1 evento',
-                                            display: 'block',
-                                            extendedProps: { 
-                                                count: 1,
-                                                events: [event] // Memorizza l'evento originale
-                                            }
-                                        };
-                                    } else {
-                                        acc[date].extendedProps.count++;
-                                        acc[date].title = `${acc[date].extendedProps.count} eventi`;
-                                        acc[date].extendedProps.events.push(event);
-                                    }
-                                    return acc;
-                                }, {});
+                // Aggiungi listener per modifica ed eliminazione
+                document.querySelectorAll('.editBtn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const taskId = btn.getAttribute('data-id');
+                        const task = tasks.find(t => t.id === taskId);
+                        editMode = true;
+                        editingEventId = taskId;
+                        document.getElementById('eventModalTitle').textContent = 'Modifica Compito/Verifica';
+                        document.getElementById('eventTitle').value = task.title;
+                        document.getElementById('eventDesc').value = task.description || '';
+                        document.getElementById('eventDate').value = task.start.split('T')[0];
+                        document.getElementById('eventStartTime').value = new Date(task.start).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+                        document.getElementById('eventEndTime').value = task.end ? new Date(task.end).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) : '';
+                        document.getElementById('eventModal').style.display = 'flex';
+                    });
+                });
 
-                                successCallback(Object.values(eventsByDate));
-                            } else {
-                                // Per le viste giornaliere e settimanali, mostra gli eventi normali
-                                successCallback(events);
-                            }
-                        } catch (err) {
-                            failureCallback(err);
-                            console.error('Errore nel caricamento degli eventi:', err);
-                        }
-                    },
-                    eventContent: arg => {
-                        if (arg.view.type === 'dayGridMonth') {
-                            if (arg.event.display !== 'background') {
-                                const count = arg.event.extendedProps.count;
-                                return {
-                                    html: `<span class="fc-event-title">${count} ${count === 1 ? 'evento' : 'eventi'}</span>`
-                                };
-                            }
-                            return {};
-                        } else {
-                            // Vista giornaliera
-                            return {
-                                html: `<div class="fc-event-main">
-                                         <span class="fc-event-title">${arg.event.title}</span>
-                                       </div>`
-                            };
-                        }
-                    },
-                    dateClick: function(info) {
-                        if (calendar.view.type === 'dayGridMonth') {
-                            calendar.changeView('timeGridDay', info.dateStr);
-                        }
-                    },
-                    eventClick: function(info) {
-                        if (calendar.view.type === 'dayGridMonth') {
-                            // Cambia vista e vai al giorno dell'evento
-                            const date = info.event.start;
-                            calendar.changeView('timeGridDay', date);
-                            
-                            // Se ci sono eventi memorizzati, aggiungili alla vista giornaliera
-                            if (info.event.extendedProps.events) {
-                                info.event.extendedProps.events.forEach(event => {
-                                    if (!calendar.getEventById(event.id)) {
-                                        calendar.addEvent({
-                                            id: event.id,
-                                            title: event.title,
-                                            start: event.start,
-                                            end: event.end,
-                                            extendedProps: {
-                                                description: event.description
-                                            }
-                                        });
+                document.querySelectorAll('.deleteBtn').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        if (confirm('Sei sicuro di voler eliminare questo compito/verifica?')) {
+                            const taskId = btn.getAttribute('data-id');
+                            try {
+                                const res = await fetch(`${API_URL}/${taskId}`, {
+                                    method: 'DELETE',
+                                    headers: {
+                                        'x-api-key': API_KEY,
+                                        'username': localStorage.getItem('username')
                                     }
                                 });
+                                if (res.ok) {
+                                    loadTasks();
+                                } else {
+                                    showCustomAlert('Errore durante l\'eliminazione.');
+                                }
+                            } catch (err) {
+                                showCustomAlert('Errore di connessione.');
                             }
-                        } else if (info.event.display !== 'background') {
-                            // Mostra il popup con i dettagli dell'evento
-                            pendingDeleteEvent = info.event;
-                            viewTitle.textContent = pendingDeleteEvent.title;
-                            viewDesc.textContent = pendingDeleteEvent.extendedProps.description || '(nessuna descrizione)';
-                            const startTime = pendingDeleteEvent.start ? pendingDeleteEvent.start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
-                            const endTime = pendingDeleteEvent.end ? pendingDeleteEvent.end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
-                            viewTime.textContent = endTime ? `Dalle ${startTime} alle ${endTime}` : `Alle ${startTime}`;
-                            eventViewModal.style.display = 'flex';
                         }
-                    },
-                    slotMinTime: '00:00:00',
-                    slotMaxTime: '24:00:00',
-                    slotDuration: '00:30:00',  // Cambiato da '01:00:00' a '00:30:00' per avere 2 tacche per ora
-                    slotLabelInterval: '01:00:00', // Aggiunto per mostrare le etichette delle ore ogni ora
-                    allDaySlot: false,
-                    eventTimeFormat: {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        hour12: false
-                    },
-                    height: 'auto', // Aggiunto per assicurare che tutti gli slot siano visibili
-                    slotEventOverlap: false, // Impedisce la sovrapposizione degli eventi
-                    displayEventTime: true, // Mostra sempre l'orario degli eventi
-                    slotLabelFormat: {  // Formattazione delle etichette degli slot
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        hour12: false
-                    },
+                    });
                 });
-                calendar.render();
 
-            // Aggiorna gli eventi ogni 3 secondi
-            setInterval(() => {
-                if (calendar) {
-                    calendar.refetchEvents();
-                }
-            }, 3000);
+                document.querySelectorAll('.task-item').forEach(item => {
+                    item.addEventListener('click', (e) => {
+                        if (e.target.tagName !== 'BUTTON') {
+                            const taskId = e.target.closest('.task-item').querySelector('.editBtn')?.getAttribute('data-id');
+                            if (taskId) {
+                                const task = tasks.find(t => t.id === taskId);
+                                document.getElementById('viewTitle').textContent = task.title;
+                                document.getElementById('viewDesc').textContent = task.description || '(nessuna descrizione)';
+                                const startTime = new Date(task.start).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+                                const endTime = task.end ? new Date(task.end).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) : 'N/A';
+                                document.getElementById('viewTime').textContent = `${startDate} ${startTime} - ${endTime}`;
+                                pendingDeleteEvent = taskId;
+                                document.getElementById('eventViewModal').style.display = 'flex';
+                            }
+                        }
+                    });
+                });
+            } catch (err) {
+                showCustomAlert('Errore nel caricamento dei compiti.');
             }
+        }
 
-            addBtn.onclick = () => addModal.style.display = 'flex';
-            cancelBtn.onclick = () => addModal.style.display = 'none';
+        document.addEventListener('DOMContentLoaded', () => {
+            const addBtn = document.getElementById('addTaskBtn');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const addModal = document.getElementById('eventModal');
+            const eventModalTitle = document.getElementById('eventModalTitle');
+            const saveBtn = document.getElementById('saveEvent');
+            const cancelBtn = document.getElementById('cancelEvent');
+            const eventViewModal = document.getElementById('eventViewModal');
+            const closeEventModalBtn = document.getElementById('closeEventModal');
+            const deleteEventBtn = document.getElementById('deleteEventBtn');
+            const editEventBtn = document.getElementById('editEventBtn');
+            const submitLoginBtn = document.getElementById('submitLogin');
+            const cancelLoginBtn = document.getElementById('cancelLogin');
+            const usernameInput = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
+            const loginError = document.getElementById('loginError');
 
-            saveBtn.onclick = () => {
+            toggleAdminUI();
+            loadTasks();
+
+            addBtn.addEventListener('click', () => {
+                if (!isLoggedIn()) {
+                    showLoginModal();
+                    return;
+                }
+                editMode = false;
+                editingEventId = null;
+                eventModalTitle.textContent = 'Nuovo Compito/Verifica';
+                document.getElementById('eventTitle').value = '';
+                document.getElementById('eventDesc').value = '';
+                document.getElementById('eventDate').value = '';
+                document.getElementById('eventStartTime').value = '';
+                document.getElementById('eventEndTime').value = '';
+                addModal.style.display = 'flex';
+            });
+
+            cancelBtn.addEventListener('click', () => {
+                addModal.style.display = 'none';
+            });
+
+            saveBtn.addEventListener('click', async () => {
                 const title = document.getElementById('eventTitle').value.trim();
                 const description = document.getElementById('eventDesc').value.trim();
                 const date = document.getElementById('eventDate').value;
                 const startTime = document.getElementById('eventStartTime').value;
                 const endTime = document.getElementById('eventEndTime').value;
-                if (!title || !date || !startTime) return showCustomAlert('Titolo, data e ora inizio obbligatori!');
 
-                pendingEvent = { title, description, start: `${date}T${startTime}`, end: endTime ? `${date}T${endTime}` : null };
-                apiKeyModal.style.display = 'flex';
-            };
-
-            submitApiKeyBtn.onclick = async () => {
-                const apiKey = document.getElementById('apiKeyInput').value.trim();
-                if (pendingEvent) {
-                    // Creazione evento
-                    try {
-                        const res = await fetch(API_URL, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-API-Key': apiKey
-                            },
-                            body: JSON.stringify(pendingEvent)
-                        });
-                        const newEvent = await res.json();
-                        if (res.ok) {
-                            calendar.addEvent({
-                                id: newEvent.id,
-                                title: newEvent.title,
-                                start: newEvent.start,
-                                end: newEvent.end,
-                                extendedProps: { description: newEvent.description }
-                            });
-                            document.getElementById('eventTitle').value = '';
-                            document.getElementById('eventDesc').value = '';
-                            document.getElementById('eventDate').value = '';
-                            document.getElementById('eventStartTime').value = '';
-                            document.getElementById('eventEndTime').value = '';
-                            document.getElementById('apiKeyInput').value = '';
-                            addModal.style.display = 'none';
-                            apiKeyModal.style.display = 'none';
-                            pendingEvent = null;
-                            showCustomAlert('Evento aggiunto con successo!');
-                        } else {
-                            showCustomAlert('Errore: ' + newEvent.error);
-                        }
-                    } catch (err) {
-                        showCustomAlert('Errore di connessione');
-                    }
-                } else if (pendingDeleteEvent) {
-                    // Eliminazione evento
-                    try {
-                        const res = await fetch(`${API_URL}/${pendingDeleteEvent.id}`, {
-                            method: 'DELETE',
-                            headers: { 'X-API-Key': apiKey }
-                        });
-                        if (res.ok) {
-                            pendingDeleteEvent.remove();
-                            eventViewModal.style.display = 'none';
-                            document.getElementById('apiKeyInput').value = '';
-                            apiKeyModal.style.display = 'none';
-                            pendingDeleteEvent = null;
-                            showCustomAlert('Evento eliminato con successo!');
-                        } else {
-                            showCustomAlert('Errore: ' + (await res.json()).error);
-                        }
-                    } catch (err) {
-                        showCustomAlert('Errore di connessione');
-                    }
+                if (!title || !date || !startTime) {
+                    showCustomAlert('Titolo, data e ora di inizio sono obbligatori!');
+                    return;
                 }
-            };
 
-            cancelApiKeyBtn.onclick = () => {
-                apiKeyModal.style.display = 'none';
-                document.getElementById('apiKeyInput').value = '';
-                pendingEvent = null;
-                pendingDeleteEvent = null;
-            };
+                const start = `${date}T${startTime}:00`;
+                const end = endTime ? `${date}T${endTime}:00` : null;
 
-            closeEventModalBtn.onclick = () => {
+                try {
+                    let url = API_URL;
+                    let method = 'POST';
+                    if (editMode) {
+                        url = `${API_URL}/${editingEventId}`;
+                        method = 'PUT';
+                    }
+                    const res = await fetch(url, {
+                        method,
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-api-key': API_KEY,
+                            'username': localStorage.getItem('username')
+                        },
+                        body: JSON.stringify({ title, description, start, end })
+                    });
+
+                    if (res.ok) {
+                        addModal.style.display = 'none';
+                        loadTasks();
+                    } else {
+                        showCustomAlert('Errore durante il salvataggio.');
+                    }
+                } catch (err) {
+                    showCustomAlert('Errore di connessione.');
+                }
+            });
+
+            closeEventModalBtn.addEventListener('click', () => {
                 eventViewModal.style.display = 'none';
-                pendingDeleteEvent = null;
-            };
+            });
 
-            deleteEventBtn.onclick = () => {
-                if (!pendingDeleteEvent) return;
-                const modal = document.createElement('div');
-                modal.className = 'modal';
-                modal.style.display = 'flex';
-                modal.style.zIndex = '10003';
-                modal.innerHTML = `
-                    <div class="modal-content">
-                        <h2>Conferma eliminazione</h2>
-                        <p>Sei sicuro di voler eliminare l'evento "${pendingDeleteEvent.title}"?</p>
-                        <div class="button-group">
-                            <button class="deleteBtn" id="confirmDelete">Elimina</button>
-                            <button class="cancelBtn" id="cancelDelete">Annulla</button>
-                        </div>
-                    </div>
-                `;
-                document.body.appendChild(modal);
-
-                document.getElementById('confirmDelete').onclick = () => {
-                    modal.remove();
-                    eventViewModal.style.display = 'none';
-                    apiKeyModal.style.display = 'flex';
-                };
-
-                document.getElementById('cancelDelete').onclick = () => {
-                    modal.remove();
-                };
-
-                modal.onclick = (e) => {
-                    if (e.target === modal) {
-                        modal.remove();
-                    }
-                };
-            };
-
-            window.onclick = e => {
-                if (e.target == addModal) addModal.style.display = 'none';
-                if (e.target == eventViewModal) eventViewModal.style.display = 'none';
-                if (e.target == apiKeyModal) {
-                    apiKeyModal.style.display = 'none';
-                    document.getElementById('apiKeyInput').value = '';
-                    pendingEvent = null;
-                    pendingDeleteEvent = null;
+            deleteEventBtn.addEventListener('click', async () => {
+                if (!isLoggedIn()) {
+                    showLoginModal();
+                    return;
                 }
-                if (e.target == document.getElementById('customAlert')) closeCustomAlert();
-            };
+                if (confirm('Sei sicuro di voler eliminare questo compito/verifica?')) {
+                    try {
+                        const res = await fetch(`${API_URL}/${pendingDeleteEvent}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'x-api-key': API_KEY,
+                                'username': localStorage.getItem('username')
+                            }
+                        });
+                        if (res.ok) {
+                            eventViewModal.style.display = 'none';
+                            loadTasks();
+                        } else {
+                            showCustomAlert('Errore durante l\'eliminazione.');
+                        }
+                    } catch (err) {
+                        showCustomAlert('Errore di connessione.');
+                    }
+                }
+            });
+
+            editEventBtn.addEventListener('click', () => {
+                if (!isLoggedIn()) {
+                    showLoginModal();
+                    return;
+                }
+                editMode = true;
+                editingEventId = pendingDeleteEvent;
+                document.getElementById('eventModalTitle').textContent = 'Modifica Compito/Verifica';
+                const task = document.querySelector(`.task-item .editBtn[data-id="${pendingDeleteEvent}"]`).closest('.task-item');
+                const title = task.querySelector('h3').textContent;
+                const desc = task.querySelector('p:nth-child(4)').textContent;
+                const dateTime = task.querySelector('p:nth-child(2)').textContent.split(' ')[1];
+                const times = task.querySelector('p:nth-child(3)').textContent.split(' - ');
+                document.getElementById('eventTitle').value = title;
+                document.getElementById('eventDesc').value = desc === '(nessuna descrizione)' ? '' : desc;
+                document.getElementById('eventDate').value = dateTime;
+                document.getElementById('eventStartTime').value = times[0];
+                document.getElementById('eventEndTime').value = times[1] === 'N/A' ? '' : times[1];
+                eventViewModal.style.display = 'none';
+                addModal.style.display = 'flex';
+            });
+
+            submitLoginBtn.addEventListener('click', async () => {
+                const username = usernameInput.value.trim();
+                const password = passwordInput.value.trim();
+                if (!username || !password) {
+                    loginError.textContent = 'Inserisci username e password.';
+                    loginError.style.display = 'block';
+                    return;
+                }
+                try {
+                    const res = await fetch('https://asdlajdkja.mx-labs.net/api/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, password })
+                    });
+                    const data = await res.json();
+                    if (data.username) {
+                        localStorage.setItem('username', data.username);
+                        hideLoginModal();
+                        toggleAdminUI();
+                        loadTasks();
+                    } else {
+                        loginError.textContent = data.error || 'Credenziali non valide.';
+                        loginError.style.display = 'block';
+                    }
+                } catch (err) {
+                    loginError.textContent = 'Errore di connessione.';
+                    loginError.style.display = 'block';
+                }
+            });
+
+            cancelLoginBtn.addEventListener('click', () => {
+                hideLoginModal();
+            });
+
+            logoutBtn.addEventListener('click', () => {
+                localStorage.removeItem('username');
+                toggleAdminUI();
+                loadTasks();
+            });
         });
     </script>
 </body>

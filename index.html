@@ -16,7 +16,6 @@
     </div>
     <button id="addTaskBtn">+</button>
     <button id="logoutBtn">🚪</button>
-
     <div id="loginModal" class="modal">
         <div class="modal-content">
             <h2>Login Admin</h2>
@@ -128,7 +127,7 @@
                 addTaskBtn.style.display = 'block';
             } else {
                 logoutBtn.style.display = 'none';
-                addTaskBtn.style.display = 'block';
+                addTaskBtn.style.display = 'block'; // Visibile anche per utenti non loggati
             }
         }
 
@@ -141,11 +140,7 @@
                     headers = { 'username': localStorage.getItem('username') };
                 }
                 const res = await fetch(`${API_URL}/all`, { headers });
-                let tasks = await res.json();
-
-                // 📌 Ordina eventi dal più recente al più vecchio (passati compresi)
-                tasks.sort((a, b) => new Date(b.start) - new Date(a.start));
-
+                const tasks = await res.json();
                 tasks.forEach(task => {
                     const taskItem = document.createElement('div');
                     taskItem.className = 'task-item';
@@ -163,26 +158,261 @@
                     `;
                     taskList.appendChild(taskItem);
                 });
+
+                // Aggiungi listener per modifica ed eliminazione
+                document.querySelectorAll('.editBtn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const taskId = btn.getAttribute('data-id');
+                        const task = tasks.find(t => t.id === taskId);
+                        editMode = true;
+                        editingEventId = taskId;
+                        document.getElementById('eventModalTitle').textContent = 'Modifica Compito/Verifica';
+                        document.getElementById('eventTitle').value = task.title;
+                        document.getElementById('eventDesc').value = task.description || '';
+                        document.getElementById('eventDate').value = task.start.split('T')[0];
+                        document.getElementById('eventStartTime').value = new Date(task.start).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+                        document.getElementById('eventEndTime').value = task.end ? new Date(task.end).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) : '';
+                        document.getElementById('eventModal').style.display = 'flex';
+                    });
+                });
+
+                document.querySelectorAll('.deleteBtn').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        if (confirm('Sei sicuro di voler eliminare questo compito/verifica?')) {
+                            const taskId = btn.getAttribute('data-id');
+                            try {
+                                const res = await fetch(`${API_URL}/${taskId}`, {
+                                    method: 'DELETE',
+                                    headers: {
+                                        'x-api-key': API_KEY,
+                                        'username': localStorage.getItem('username')
+                                    }
+                                });
+                                if (res.ok) {
+                                    loadTasks();
+                                } else {
+                                    showCustomAlert('Errore durante l\'eliminazione.');
+                                }
+                            } catch (err) {
+                                showCustomAlert('Errore di connessione.');
+                            }
+                        }
+                    });
+                });
+
+                document.querySelectorAll('.task-item').forEach(item => {
+                    item.addEventListener('click', (e) => {
+                        if (e.target.tagName !== 'BUTTON') {
+                            const taskId = e.target.closest('.task-item').querySelector('.editBtn')?.getAttribute('data-id');
+                            if (taskId) {
+                                const task = tasks.find(t => t.id === taskId);
+                                document.getElementById('viewTitle').textContent = task.title;
+                                document.getElementById('viewDesc').textContent = task.description || '(nessuna descrizione)';
+                                const startTime = new Date(task.start).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+                                const endTime = task.end ? new Date(task.end).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' }) : 'N/A';
+                                document.getElementById('viewTime').textContent = `${startDate} ${startTime} - ${endTime}`;
+                                pendingDeleteEvent = taskId;
+                                document.getElementById('eventViewModal').style.display = 'flex';
+                            }
+                        }
+                    });
+                });
             } catch (err) {
                 showCustomAlert('Errore nel caricamento dei compiti.');
             }
         }
 
+        function clearCookies() {
+            // Funzione per cancellare tutti i cookies
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const eqPos = cookie.indexOf('=');
+                const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+                document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
+            }
+            // Poiché l'app usa localStorage per il login, cancelliamo anche quello per simulare la cancellazione di "cookies"
+            localStorage.clear();
+            toggleAdminUI();
+            loadTasks();
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
+            const addBtn = document.getElementById('addTaskBtn');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const addModal = document.getElementById('eventModal');
+            const eventModalTitle = document.getElementById('eventModalTitle');
+            const saveBtn = document.getElementById('saveEvent');
+            const cancelBtn = document.getElementById('cancelEvent');
+            const eventViewModal = document.getElementById('eventViewModal');
+            const closeEventModalBtn = document.getElementById('closeEventModal');
+            const deleteEventBtn = document.getElementById('deleteEventBtn');
+            const editEventBtn = document.getElementById('editEventBtn');
+            const submitLoginBtn = document.getElementById('submitLogin');
+            const cancelLoginBtn = document.getElementById('cancelLogin');
+            const usernameInput = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
+            const loginError = document.getElementById('loginError');
+
             toggleAdminUI();
             loadTasks();
 
-            // 🔄 Auto-clear cookies + localStorage ogni 10 minuti
-            setInterval(() => {
-                document.cookie.split(";").forEach(cookie => {
-                    const eqPos = cookie.indexOf("=");
-                    const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
-                    document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
-                });
-                localStorage.clear();
-                console.log("Cookies e localStorage cancellati automaticamente");
-                location.reload(); // 🔁 aggiorna la pagina
-            }, 10 * 60 * 1000);
+            // Aggiungi il timer per cancellare i cookies (e localStorage) ogni 20 minuti
+            setInterval(clearCookies, 20 * 60 * 1000); // 20 minuti in millisecondi
+
+            addBtn.addEventListener('click', () => {
+                if (!isLoggedIn()) {
+                    showLoginModal();
+                    return;
+                }
+                editMode = false;
+                editingEventId = null;
+                eventModalTitle.textContent = 'Nuovo Compito/Verifica';
+                document.getElementById('eventTitle').value = '';
+                document.getElementById('eventDesc').value = '';
+                document.getElementById('eventDate').value = '';
+                document.getElementById('eventStartTime').value = '';
+                document.getElementById('eventEndTime').value = '';
+                addModal.style.display = 'flex';
+            });
+
+            cancelBtn.addEventListener('click', () => {
+                addModal.style.display = 'none';
+            });
+
+            saveBtn.addEventListener('click', async () => {
+                const title = document.getElementById('eventTitle').value.trim();
+                const description = document.getElementById('eventDesc').value.trim();
+                const date = document.getElementById('eventDate').value;
+                const startTime = document.getElementById('eventStartTime').value;
+                const endTime = document.getElementById('eventEndTime').value;
+
+                if (!title || !date || !startTime) {
+                    showCustomAlert('Titolo, data e ora di inizio sono obbligatori!');
+                    return;
+                }
+
+                const start = `${date}T${startTime}:00`;
+                const end = endTime ? `${date}T${endTime}:00` : null;
+
+                try {
+                    let url = API_URL;
+                    let method = 'POST';
+                    if (editMode) {
+                        url = `${API_URL}/${editingEventId}`;
+                        method = 'PUT';
+                    }
+                    const res = await fetch(url, {
+                        method,
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-api-key': API_KEY,
+                            'username': localStorage.getItem('username')
+                        },
+                        body: JSON.stringify({ title, description, start, end })
+                    });
+
+                    if (res.ok) {
+                        addModal.style.display = 'none';
+                        loadTasks();
+                    } else {
+                        showCustomAlert('Errore durante il salvataggio.');
+                    }
+                } catch (err) {
+                    showCustomAlert('Errore di connessione.');
+                }
+            });
+
+            closeEventModalBtn.addEventListener('click', () => {
+                eventViewModal.style.display = 'none';
+            });
+
+            deleteEventBtn.addEventListener('click', async () => {
+                if (!isLoggedIn()) {
+                    showLoginModal();
+                    return;
+                }
+                if (confirm('Sei sicuro di voler eliminare questo compito/verifica?')) {
+                    try {
+                        const res = await fetch(`${API_URL}/${pendingDeleteEvent}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'x-api-key': API_KEY,
+                                'username': localStorage.getItem('username')
+                            }
+                        });
+                        if (res.ok) {
+                            eventViewModal.style.display = 'none';
+                            loadTasks();
+                        } else {
+                            showCustomAlert('Errore durante l\'eliminazione.');
+                        }
+                    } catch (err) {
+                        showCustomAlert('Errore di connessione.');
+                    }
+                }
+            });
+
+            editEventBtn.addEventListener('click', () => {
+                if (!isLoggedIn()) {
+                    showLoginModal();
+                    return;
+                }
+                editMode = true;
+                editingEventId = pendingDeleteEvent;
+                document.getElementById('eventModalTitle').textContent = 'Modifica Compito/Verifica';
+                const task = document.querySelector(`.task-item .editBtn[data-id="${pendingDeleteEvent}"]`).closest('.task-item');
+                const title = task.querySelector('h3').textContent;
+                const desc = task.querySelector('p:nth-child(4)').textContent;
+                const dateTime = task.querySelector('p:nth-child(2)').textContent.split(' ')[1];
+                const times = task.querySelector('p:nth-child(3)').textContent.split(' - ');
+                document.getElementById('eventTitle').value = title;
+                document.getElementById('eventDesc').value = desc === '(nessuna descrizione)' ? '' : desc;
+                document.getElementById('eventDate').value = dateTime;
+                document.getElementById('eventStartTime').value = times[0];
+                document.getElementById('eventEndTime').value = times[1] === 'N/A' ? '' : times[1];
+                eventViewModal.style.display = 'none';
+                addModal.style.display = 'flex';
+            });
+
+            submitLoginBtn.addEventListener('click', async () => {
+                const username = usernameInput.value.trim();
+                const password = passwordInput.value.trim();
+                if (!username || !password) {
+                    loginError.textContent = 'Inserisci username e password.';
+                    loginError.style.display = 'block';
+                    return;
+                }
+                try {
+                    const res = await fetch('https://asdlajdkja.mx-labs.net/api/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, password })
+                    });
+                    const data = await res.json();
+                    if (data.username) {
+                        localStorage.setItem('username', data.username);
+                        hideLoginModal();
+                        toggleAdminUI();
+                        loadTasks();
+                    } else {
+                        loginError.textContent = data.error || 'Credenziali non valide.';
+                        loginError.style.display = 'block';
+                    }
+                } catch (err) {
+                    loginError.textContent = 'Errore di connessione.';
+                    loginError.style.display = 'block';
+                }
+            });
+
+            cancelLoginBtn.addEventListener('click', () => {
+                hideLoginModal();
+            });
+
+            logoutBtn.addEventListener('click', () => {
+                localStorage.removeItem('username');
+                toggleAdminUI();
+                loadTasks();
+            });
         });
     </script>
 </body>

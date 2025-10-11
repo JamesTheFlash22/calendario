@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Elenco Compiti e Verifiche</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>SITO SOLO ADMIN NEGRO</h1>
+            <button id="themeToggle" class="theme-button">Passa alla dark mode</button>
+        </div>
+    </header>
+    <div id="task-container">
+        <div id="task-list"></div>
+    </div>
+    <button id="addTaskBtn">+</button>
+    <button id="logoutBtn">🚪</button>
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <h2>Login Admin</h2>
+            <input type="text" id="username" placeholder="Username">
+            <input type="password" id="password" placeholder="Password">
+            <p id="loginError" style="color: red; display: none;"></p>
+            <div class="button-group">
+                <button id="submitLogin" class="saveBtn">Accedi</button>
+                <button id="cancelLogin" class="cancelBtn">Annulla</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="eventModal" class="modal">
+        <div class="modal-content">
+            <h2 id="eventModalTitle">Nuovo Compito/Verifica</h2>
+            <div class="form-grid">
+                <div class="full-width">
+                    <input type="text" id="eventTitle" placeholder="Titolo (obbligatorio)">
+                </div>
+                <div class="full-width">
+                    <textarea id="eventDesc" placeholder="Descrizione (opzionale)"></textarea>
+                </div>
+                <div>
+                    <input type="date" id="eventDate">
+                </div>
+                <div>
+                    <select id="eventStartTime" class="time-select">
+                        <option value="">Seleziona ora inizio</option>
+                        <option value="08:00">Prima ora (8:00)</option>
+                        <option value="09:00">Seconda ora (9:00)</option>
+                        <option value="10:00">Terza ora (10:00)</option>
+                        <option value="11:00">Quarta ora (11:00)</option>
+                        <option value="12:00">Quinta ora (12:00)</option>
+                        <option value="13:00">Sesta ora (13:00)</option>
+                    </select>
+                </div>
+                <div>
+                    <select id="eventEndTime" class="time-select">
+                        <option value="">Seleziona ora fine</option>
+                        <option value="09:00">Prima ora (9:00)</option>
+                        <option value="10:00">Seconda ora (10:00)</option>
+                        <option value="11:00">Terza ora (11:00)</option>
+                        <option value="12:00">Quarta ora (12:00)</option>
+                        <option value="13:00">Quinta ora (13:00)</option>
+                        <option value="14:00">Sesta ora (14:00)</option>
+                    </select>
+                </div>
+                <div class="full-width button-group">
+                    <button class="saveBtn" id="saveEvent">Salva</button>
+                    <button class="cancelBtn" id="cancelEvent">Annulla</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="eventViewModal" class="modal">
+        <div class="eventModalContent">
+            <button class="closeEventModal" id="closeEventModal">✖</button>
+            <h3 id="viewTitle"></h3>
+            <p id="viewTime"></p>
+            <p id="viewDesc"></p>
+            <button class="editBtn" id="editEventBtn">✏️ Modifica</button>
+            <button class="deleteBtn" id="deleteEventBtn">🗑 Elimina</button>
+        </div>
+    </div>
+
+    <div id="customAlert">
+        <div class="alertContent">
+            <p id="alertMessage"></p>
+            <button onclick="closeCustomAlert()">Chiudi</button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://asdlajdkja.mx-labs.net/api/events';
+        const API_KEY = '7391';
+        let pendingDeleteEvent = null;
+        let editMode = false;
+        let editingEventId = null;
+
+        function showCustomAlert(msg) {
+            document.getElementById('alertMessage').textContent = msg;
+            document.getElementById('customAlert').style.display = 'flex';
+        }
+
+        function closeCustomAlert() {
+            document.getElementById('customAlert').style.display = 'none';
+        }
+
+        function isLoggedIn() {
+            return !!localStorage.getItem('username');
+        }
+
+        function showLoginModal() {
+            const loginModal = document.getElementById('loginModal');
+            loginModal.style.display = 'flex';
+            document.getElementById('username').focus();
+        }
+
+        function hideLoginModal() {
+            document.getElementById('loginModal').style.display = 'none';
+            document.getElementById('loginError').style.display = 'none';
+        }
+
+        function toggleAdminUI() {
+            const logoutBtn = document.getElementById('logoutBtn');
+            const addTaskBtn = document.getElementById('addTaskBtn');
+            if (isLoggedIn()) {
+                logoutBtn.style.display = 'block';
+                addTaskBtn.style.display = 'block';
+            } else {
+                logoutBtn.style.display = 'none';
+                addTaskBtn.style.display = 'block'; // Visibile anche per utenti non loggati
+            }
+        }
+
+        // Gestione del tema
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            document.cookie = `theme=${theme};max-age=31536000;path=/`;
+            
+            // Aggiorna il testo del pulsante
+            const themeBtn = document.getElementById('themeToggle');
+            if (theme === 'dark') {
+                themeBtn.textContent = 'Passa alla light mode';
+            } else {
+                themeBtn.textContent = 'Passa alla dark mode';
+            }
+        }
+
+        function getThemeFromCookie() {
+            const cookies = document.cookie.split(';');
+            for(let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if(name === 'theme') return value;
+            }
+            return 'light';
+        }
+
+        function toggleTheme() {
+            const currentTheme = getThemeFromCookie();
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            setTheme(newTheme);
+        }
+
+        async function loadTasks() {
+            const taskList = document.getElementById('task-list');
+            taskList.innerHTML = '';
+            
+            if (!isLoggedIn()) {
+                taskList.innerHTML = `
+                    <div class="login-required">
+                        <h2>Accesso Richiesto</h2>
+                        <p>Per visualizzare i compiti devi effettuare l'accesso come amministratore.</p>
+                        <button onclick="showLoginModal()">Accedi</button>
+                    </div>
+                `;
+                return;
+            }
+            
+            try {
+                const res = await fetch(`${API_URL}/all`, {
+                    method: 'GET',
+                    headers: {
+                        'x-api-key': API_KEY,
+                        'username': localStorage.getItem('username')
+                    }
+                });
+
+                if (!res.ok) {
+                    throw new Error('Errore nel caricamento dei dati');
+                }
+
+                const data = await res.json();
+                
+                if (Array.isArray(data)) {
+                    // Ordina gli eventi per data, i più recenti prima
+                    data.sort((a, b) => new Date(b.start) - new Date(a.start));
+
+                    // Raggruppa gli eventi per data
+                    const groupedEvents = {};
+                    data.forEach(event => {
+                        const date = new Date(event.start).toLocaleDateString('it-IT');
+                        if (!groupedEvents[date]) {
+                            groupedEvents[date] = [];
+                        }
+                        groupedEvents[date].push(event);
+                    });
+
+                    // Se non ci sono eventi
+                    if (Object.keys(groupedEvents).length === 0) {
+                        taskList.innerHTML = `
+                            <div class="login-required">
+                                <h2>Nessun evento</h2>
+                                <p>Non ci sono compiti o verifiche programmati.</p>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    // Crea gli elementi HTML per ogni gruppo di date
+                    Object.entries(groupedEvents).forEach(([date, events]) => {
+                        const dateDiv = document.createElement('div');
+                        dateDiv.className = 'date-separator';
+                        dateDiv.textContent = date;
+                        taskList.appendChild(dateDiv);
+
+                        events.forEach(event => {
+                            const taskItem = document.createElement('div');
+                            taskItem.className = 'task-item';
+                            const startTime = new Date(event.start).toLocaleTimeString('it-IT', { 
+                                hour: '2-digit', 
+                                minute: '2-digit' 
+                            });
+                            const endTime = event.end ? new Date(event.end).toLocaleTimeString('it-IT', { 
+                                hour: '2-digit', 
+                                minute: '2-digit' 
+                            }) : 'N/A';
+
+                            taskItem.innerHTML = `
+                                <div class="task-info">
+                                    <h3>${event.title}</h3>
+                                    <p>Ora: ${startTime} - ${endTime}</p>
+                                    <p>${event.description || '(nessuna descrizione)'}</p>
+                                </div>
+                                <div class="task-actions">
+                                    <button class="editBtn" data-id="${event.id}">✏️</button>
+                                    <button class="deleteBtn" data-id="${event.id}">🗑</button>
+                                </div>
+                            `;
+
+                            // Aggiungi gli event listener per i pulsanti
+                            taskItem.querySelector('.editBtn').addEventListener('click', () => {
+                                editMode = true;
+                                editingEventId = event.id;
+                                document.getElementById('eventModalTitle').textContent = 'Modifica Compito/Verifica';
+                                document.getElementById('eventTitle').value = event.title;
+                                document.getElementById('eventDesc').value = event.description || '';
+                                document.getElementById('eventDate').value = event.start.split('T')[0];
+                                document.getElementById('eventStartTime').value = startTime;
+                                document.getElementById('eventEndTime').value = endTime === 'N/A' ? '' : endTime;
+                                document.getElementById('eventModal').style.display = 'flex';
+                            });
+
+                            taskItem.querySelector('.deleteBtn').addEventListener('click', () => {
+                                pendingDeleteEvent = event.id;
+                                showCustomAlert('Sei sicuro di voler eliminare questo compito/verifica?');
+                            });
+
+                            taskList.appendChild(taskItem);
+                        });
+                    });
+                }
+            } catch (err) {
+                console.error('Errore:', err);
+                showCustomAlert('Errore durante il caricamento dei compiti.');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const addBtn = document.getElementById('addTaskBtn');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const addModal = document.getElementById('eventModal');
+            const eventModalTitle = document.getElementById('eventModalTitle');
+            const saveBtn = document.getElementById('saveEvent');
+            const cancelBtn = document.getElementById('cancelEvent');
+            const eventViewModal = document.getElementById('eventViewModal');
+            const closeEventModalBtn = document.getElementById('closeEventModal');
+            const deleteEventBtn = document.getElementById('deleteEventBtn');
+            const editEventBtn = document.getElementById('editEventBtn');
+            const submitLoginBtn = document.getElementById('submitLogin');
+            const cancelLoginBtn = document.getElementById('cancelLogin');
+            const usernameInput = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
+            const loginError = document.getElementById('loginError');
+
+            toggleAdminUI();
+            loadTasks();
+
+            addBtn.addEventListener('click', () => {
+                if (!isLoggedIn()) {
+                    showLoginModal();
+                    return;
+                }
+                editMode = false;
+                editingEventId = null;
+                eventModalTitle.textContent = 'Nuovo Compito/Verifica';
+                document.getElementById('eventTitle').value = '';
+                document.getElementById('eventDesc').value = '';
+                document.getElementById('eventDate').value = '';
+                document.getElementById('eventStartTime').value = '';
+                document.getElementById('eventEndTime').value = '';
+                addModal.style.display = 'flex';
+            });
+
+            cancelBtn.addEventListener('click', () => {
+                addModal.style.display = 'none';
+            });
+
+            saveBtn.addEventListener('click', async () => {
+                const title = document.getElementById('eventTitle').value.trim();
+                const description = document.getElementById('eventDesc').value.trim();
+                const date = document.getElementById('eventDate').value;
+                const startTime = document.getElementById('eventStartTime').value;
+                const endTime = document.getElementById('eventEndTime').value;
+
+                if (!title || !date || !startTime) {
+                    showCustomAlert('Titolo, data e ora di inizio sono obbligatori!');
+                    return;
+                }
+
+                const start = `${date}T${startTime}:00`;
+                const end = endTime ? `${date}T${endTime}:00` : null;
+
+                try {
+                    let url = API_URL;
+                    let method = 'POST';
+                    if (editMode) {
+                        url = `${API_URL}/${editingEventId}`;
+                        method = 'PUT';
+                    }
+                    const res = await fetch(url, {
+                        method,
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-api-key': API_KEY,
+                            'username': localStorage.getItem('username')
+                        },
+                        body: JSON.stringify({ title, description, start, end })
+                    });
+
+                    if (res.ok) {
+                        addModal.style.display = 'none';
+                        loadTasks();
+                    } else {
+                        showCustomAlert('Errore durante il salvataggio.');
+                    }
+                } catch (err) {
+                    showCustomAlert('Errore di connessione.');
+                }
+            });
+
+            closeEventModalBtn.addEventListener('click', () => {
+                eventViewModal.style.display = 'none';
+            });
+
+            deleteEventBtn.addEventListener('click', async () => {
+                if (!isLoggedIn()) {
+                    showLoginModal();
+                    return;
+                }
+                if (confirm('Sei sicuro di voler eliminare questo compito/verifica?')) {
+                    try {
+                        const res = await fetch(`${API_URL}/${pendingDeleteEvent}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'x-api-key': API_KEY,
+                                'username': localStorage.getItem('username')
+                            }
+                        });
+                        if (res.ok) {
+                            eventViewModal.style.display = 'none';
+                            loadTasks();
+                        } else {
+                            showCustomAlert('Errore durante l\'eliminazione.');
+                        }
+                    } catch (err) {
+                        showCustomAlert('Errore di connessione.');
+                    }
+                }
+            });
+
+            editEventBtn.addEventListener('click', () => {
+                if (!isLoggedIn()) {
+                    showLoginModal();
+                    return;
+                }
+                editMode = true;
+                editingEventId = pendingDeleteEvent;
+                document.getElementById('eventModalTitle').textContent = 'Modifica Compito/Verifica';
+                const task = document.querySelector(`.task-item .editBtn[data-id="${pendingDeleteEvent}"]`).closest('.task-item');
+                const title = task.querySelector('h3').textContent;
+                const desc = task.querySelector('p:nth-child(4)').textContent;
+                const dateTime = task.querySelector('p:nth-child(2)').textContent.split(' ')[1];
+                const times = task.querySelector('p:nth-child(3)').textContent.split(' - ');
+                document.getElementById('eventTitle').value = title;
+                document.getElementById('eventDesc').value = desc === '(nessuna descrizione)' ? '' : desc;
+                document.getElementById('eventDate').value = dateTime;
+                document.getElementById('eventStartTime').value = times[0];
+                document.getElementById('eventEndTime').value = times[1] === 'N/A' ? '' : times[1];
+                eventViewModal.style.display = 'none';
+                addModal.style.display = 'flex';
+            });
+
+            submitLoginBtn.addEventListener('click', async () => {
+                const username = usernameInput.value.trim();
+                const password = passwordInput.value.trim();
+                if (!username || !password) {
+                    loginError.textContent = 'Inserisci username e password.';
+                    loginError.style.display = 'block';
+                    return;
+                }
+                try {
+                    const res = await fetch('https://asdlajdkja.mx-labs.net/api/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, password })
+                    });
+                    const data = await res.json();
+                    if (data.username) {
+                        localStorage.setItem('username', data.username);
+                        hideLoginModal();
+                        toggleAdminUI();
+                        loadTasks();
+                    } else {
+                        loginError.textContent = data.error || 'Credenziali non valide.';
+                        loginError.style.display = 'block';
+                    }
+                } catch (err) {
+                    loginError.textContent = 'Errore di connessione.';
+                    loginError.style.display = 'block';
+                }
+            });
+
+            cancelLoginBtn.addEventListener('click', () => {
+                hideLoginModal();
+            });
+
+            logoutBtn.addEventListener('click', () => {
+                localStorage.removeItem('username');
+                toggleAdminUI();
+                loadTasks();
+            });
+
+            // Aggiungi questo listener per il pulsante tema
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+            
+            // Inizializza il tema
+            const savedTheme = getThemeFromCookie();
+            setTheme(savedTheme);
+        });
+    </script>
+</body>
+</html>

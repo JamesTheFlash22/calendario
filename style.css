@@ -48,10 +48,10 @@ header {
     transform: translateY(-2px);
 }
 
-/* Rimuovi il pulsante + */
-#addTaskBtn {
+/* Rimuovi o commenta questa regola che nasconde il pulsante + */
+/*#addTaskBtn {
     display: none !important;
-}
+}*/
 
 #task-container {
     max-width: 1200px;

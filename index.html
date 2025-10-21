@@ -341,7 +341,7 @@
                     let method = 'POST';
                     if (editMode) {
                         url = `${API_URL}/${editingEventId}`;
-                        method = 'PUT';
+                        method = 'PUT'; // Usa il metodo PUT per modificare un evento esistente
                     }
                     const res = await fetch(url, {
                         method,
@@ -355,9 +355,10 @@
 
                     if (res.ok) {
                         addModal.style.display = 'none';
-                        loadTasks();
+                        loadTasks(); // Ricarica la lista degli eventi
                     } else {
-                        showCustomAlert('Errore durante il salvataggio.');
+                        const errorData = await res.json();
+                        showCustomAlert(errorData.error || 'Errore durante il salvataggio.');
                     }
                 } catch (err) {
                     showCustomAlert('Errore di connessione.');
@@ -401,18 +402,23 @@
                 }
                 editMode = true;
                 editingEventId = pendingDeleteEvent;
+
+                // Trova l'evento da modificare
+                const event = events.find(ev => ev.id === pendingDeleteEvent);
+                if (!event) {
+                    showCustomAlert('Evento non trovato.');
+                    return;
+                }
+
+                // Precompila i campi del modale con i dati dell'evento
                 document.getElementById('eventModalTitle').textContent = 'Modifica Compito/Verifica';
-                const task = document.querySelector(`.task-item .editBtn[data-id="${pendingDeleteEvent}"]`).closest('.task-item');
-                const title = task.querySelector('h3').textContent;
-                const desc = task.querySelector('p:nth-child(4)').textContent;
-                const dateTime = task.querySelector('p:nth-child(2)').textContent.split(' ')[1];
-                const times = task.querySelector('p:nth-child(3)').textContent.split(' - ');
-                document.getElementById('eventTitle').value = title;
-                document.getElementById('eventDesc').value = desc === '(nessuna descrizione)' ? '' : desc;
-                document.getElementById('eventDate').value = dateTime;
-                document.getElementById('eventStartTime').value = times[0];
-                document.getElementById('eventEndTime').value = times[1] === 'N/A' ? '' : times[1];
-                eventViewModal.style.display = 'none';
+                document.getElementById('eventTitle').value = event.title;
+                document.getElementById('eventDesc').value = event.description || '';
+                document.getElementById('eventDate').value = event.start.split('T')[0];
+                document.getElementById('eventStartTime').value = event.start.split('T')[1].slice(0, 5);
+                document.getElementById('eventEndTime').value = event.end ? event.end.split('T')[1].slice(0, 5) : '';
+
+                // Mostra il modale
                 addModal.style.display = 'flex';
             });
 
